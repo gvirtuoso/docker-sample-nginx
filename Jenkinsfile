@@ -6,7 +6,8 @@ podTemplate(label: 'jenkins-pipeline', containers: [
 volumes:[
     hostPathVolume(mountPath: '/var/run/docker.sock', hostPath: '/var/run/docker.sock'),
 ]){
-    def image = "gvirtuoso/docker-sample-nginx"
+    def project = "docker-sample-nginx"
+    def image = "gvirtuoso/${project}"
     node ('jenkins-pipeline') {
 
         checkout scm
@@ -52,7 +53,8 @@ volumes:[
             stage('Deploy') {
                 container('kubectl') {
                     // Here should make de deployment on PROD kubernetes env
-                    sh "kubectl apply -f docker-sample-nginx.yaml"
+                    sh "kubectl apply -f ${project}.yaml"
+                    sh "kubectl set image deployment ${project} ${project}=$(docker inspect --format='{{index .RepoDigests 0}}' ${image})"
                 }
             }
         }
