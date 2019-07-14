@@ -25,7 +25,7 @@ volumes:[
             stage('Deploy') {
                 container('kubectl') {
                     // Run routines for PRs
-                    sh "echo 'Running deployment routines for PR's'"
+                    sh "echo 'Running deployment routines for PRs'"
                 }
             }
         }
