@@ -30,7 +30,7 @@ volumes:[
             }
         }
 
-        if (env.BRANCH_NAME != 'develop' and env.BRANCH_NAME != 'master') {
+        if (env.BRANCH_NAME != 'develop' && env.BRANCH_NAME != 'master') {
             stage('Deploy') {
                 container('kubectl') {
                     // Run routines for feature branches
