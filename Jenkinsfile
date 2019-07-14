@@ -53,7 +53,7 @@ volumes:[
                 container('kubectl') {
                     // Here should make de deployment on PROD kubernetes env
                     sh "kubectl apply -f docker-sample-nginx.yaml"
-                    sh "kubectl set image deployment docker-sample-nginx docker-sample-nginx=$(docker inspect --format='{{index .RepoDigests 0}}' gvirtuoso\/docker-sample-nginx:latest)"
+                    sh "kubectl set image deployment docker-sample-nginx docker-sample-nginx=\$(docker inspect --format='{{index .RepoDigests 0}}' gvirtuoso/docker-sample-nginx:latest)"
                 }
             }
         }
