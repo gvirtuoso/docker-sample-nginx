@@ -6,7 +6,6 @@ podTemplate(label: 'jenkins-pipeline', containers: [
 volumes:[
     hostPathVolume(mountPath: '/var/run/docker.sock', hostPath: '/var/run/docker.sock'),
 ]){
-    def image = "gvirtuoso/docker-sample-nginx"
     node ('jenkins-pipeline') {
         checkout scm
         stage('Build & Push') {
@@ -14,12 +13,14 @@ volumes:[
                 withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'dockerhub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
                     sh "docker login -u ${env.USERNAME} -p ${env.PASSWORD}"
                 }
-                sh "docker build -t ${image} ."
+                sh "docker build -t docker-sample-nginx ."
                 if (env.BRANCH_NAME == 'develop') {
-                    sh "docker push ${image}:develop"
+                    sh "docker tag docker-sample-nginx:latest gvirtuoso/docker-sample-nginx:develop"
+                    sh "docker push gvirtuoso/docker-sample-nginx:develop"
                 }
                 if (env.BRANCH_NAME == 'master') {
-                    sh "docker push ${image}:latest"
+                    sh "docker tag docker-sample-nginx:latest gvirtuoso/docker-sample-nginx:latest"
+                    sh "docker push gvirtuoso/docker-sample-nginx:latest"
                 }
             }
         }
