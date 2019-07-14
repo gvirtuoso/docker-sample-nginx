@@ -8,6 +8,9 @@ volumes:[
 ]){
     def image = "gvirtuoso/docker-sample-nginx"
     node ('jenkins-pipeline') {
+
+        checkout scm
+
         stage('Build') {
             container('docker') {
                 withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'dockerhub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
@@ -17,6 +20,7 @@ volumes:[
                 sh "docker push ${image}:latest"
             }
         }
+        
         stage('Deploy') {
             container('kubectl') {
                 sh "kubectl apply -f docker-sample-nginx.yaml"
