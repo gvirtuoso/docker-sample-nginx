@@ -6,57 +6,39 @@ podTemplate(label: 'jenkins-pipeline', containers: [
 volumes:[
     hostPathVolume(mountPath: '/var/run/docker.sock', hostPath: '/var/run/docker.sock'),
 ]){
-    def image = "gvirtuoso/docker-sample-nginx"
     node ('jenkins-pipeline') {
-
         checkout scm
-
-        stage('Build') {
+        stage('Build & Push') {
             container('docker') {
                 withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'dockerhub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
                     sh "docker login -u ${env.USERNAME} -p ${env.PASSWORD}"
                 }
-                sh "docker build -t ${image} ."
-                sh "docker push ${image}:latest"
-            }
-        }
-
-        if (env.BRANCH_NAME =~ "PR-*" ) {
-            stage('Deploy') {
-                container('kubectl') {
-                    // Run routines for PRs
-                    sh "echo 'Running deployment routines for PRs'"
+                sh "docker build -t docker-sample-nginx ."
+                if (env.BRANCH_NAME == 'develop') {
+                    sh "docker tag docker-sample-nginx:latest gvirtuoso/docker-sample-nginx:develop"
+                    sh "docker push gvirtuoso/docker-sample-nginx:develop"
+                }
+                if (env.BRANCH_NAME == 'master') {
+                    sh "docker tag docker-sample-nginx:latest gvirtuoso/docker-sample-nginx:latest"
+                    sh "docker push gvirtuoso/docker-sample-nginx:latest"
                 }
             }
         }
-
-        if (env.BRANCH_NAME != 'develop' && env.BRANCH_NAME != 'master') {
-            stage('Deploy') {
-                container('kubectl') {
-                    // Run routines for feature branches
-                    sh "echo 'Running deployment routines for feature branches'"
+        stage('Deploy') {
+            container('kubectl') {
+                script {
+                    java.time.LocalDateTime localDateTime = java.time.LocalDateTime.now()
+                    java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")
+                    DATETIME = localDateTime.format(formatter)
                 }
-            }
-        }
-
-        if (env.BRANCH_NAME == 'develop') {
-            stage('Deploy') {
-                container('kubectl') {
-                    // Here should make de deployment on DEV kubernetes env
+                if (env.BRANCH_NAME == 'develop') {
                     sh "echo 'Deploying on DEV'"
                 }
-            }
-        }
-
-        if (env.BRANCH_NAME == 'master') {
-            stage('Deploy') {
-                container('kubectl') {
-                    // Here should make de deployment on PROD kubernetes env
+                if (env.BRANCH_NAME == 'master') {
                     sh "kubectl apply -f docker-sample-nginx.yaml"
-                    sh "kubectl patch deployment docker-sample-nginx -p \"{\"spec\":{\"template\":{\"metadata\":{\"labels\":{\"date\":\"`date +'%s'`\"}}}}}\" "
+                    sh "kubectl patch deployment docker-sample-nginx -p '{\"spec\":{\"template\":{\"metadata\":{\"labels\":{\"date\":\"${DATETIME}\"}}}}}'"
                 }
             }
         }
-
     }
 }
