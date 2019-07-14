@@ -20,10 +20,40 @@ volumes:[
                 sh "docker push ${image}:latest"
             }
         }
-        
-        stage('Deploy') {
-            container('kubectl') {
-                sh "kubectl apply -f docker-sample-nginx.yaml"
+
+        if (env.BRANCH_NAME =~ "PR-*" ) {
+            stage('Deploy') {
+                container('kubectl') {
+                    // Run routines for PRs
+                    sh "echo 'Running deployment routines for PR's'"
+                }
+            }
+        }
+
+        if (env.BRANCH_NAME != 'develop' and env.BRANCH_NAME != 'master') {
+            stage('Deploy') {
+                container('kubectl') {
+                    // Run routines for feature branches
+                    sh "echo 'Running deployment routines for feature branches'"
+                }
+            }
+        }
+
+        if (env.BRANCH_NAME == 'develop') {
+            stage('Deploy') {
+                container('kubectl') {
+                    // Here should make de deployment on DEV kubernetes env
+                    sh "echo 'Deploying on DEV'"
+                }
+            }
+        }
+
+        if (env.BRANCH_NAME == 'master') {
+            stage('Deploy') {
+                container('kubectl') {
+                    // Here should make de deployment on PROD kubernetes env
+                    sh "kubectl apply -f docker-sample-nginx.yaml"
+                }
             }
         }
 
