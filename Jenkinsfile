@@ -8,9 +8,6 @@ volumes:[
 ]){
     def image = "gvirtuoso/docker-sample-nginx"
     node ('jenkins-pipeline') {
-        stage('SCM Checkout') {
-            git "https://github.com/${image}.git"
-        }
         stage('Build') {
             container('docker') {
                 withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'dockerhub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
