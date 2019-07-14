@@ -25,7 +25,7 @@ volumes:[
             stage('Deploy') {
                 container('kubectl') {
                     // Run routines for PRs
-                    sh "echo 'Running deployment routines for PR's'"
+                    sh "echo 'Running deployment routines for PRs'"
                 }
             }
         }
@@ -53,6 +53,7 @@ volumes:[
                 container('kubectl') {
                     // Here should make de deployment on PROD kubernetes env
                     sh "kubectl apply -f docker-sample-nginx.yaml"
+                    sh "kubectl patch deployment docker-sample-nginx -p \"{\"spec\":{\"template\":{\"metadata\":{\"labels\":{\"date\":\"`date +'%s'`\"}}}}}\" "
                 }
             }
         }
